@@ -1,0 +1,1983 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>TaskApp — Admin Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,400;0,500;1,400&family=Epilogue:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+<link rel="icon" type="image/png" sizes="32x32" href="./icons/favicon-32.png"/>
+<link rel="apple-touch-icon" sizes="180x180" href="./icons/apple-touch-icon.png"/>
+<link rel="manifest" href="./manifest.json"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<meta name="theme-color" content="#0e766e"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="default"/>
+<meta name="apple-mobile-web-app-title" content="TaskApp"/>
+<style>
+:root{
+  --bg:#f3f7f9;--bg2:#ecf3f6;--surface:#ffffff;--card:#ffffff;--card2:#f8fcfd;
+  --surface-variant:#e6eff2;
+  --border:#cfdee5;--border2:#bfd1da;
+  --accent:#0e766e;--accent2:#f97316;--amber:#d78800;--red:#d14343;
+  --success:#1a9a5f;
+  --text:#102a43;--sub:#486581;--dim:#6b879e;
+  --font:'Epilogue',sans-serif;--mono:'DM Mono',monospace;
+  --r:12px;--app-r:26px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{
+  height:100%;
+  font-family:var(--font);
+  color:var(--text);
+  font-size:14px;
+  background:
+    radial-gradient(950px 560px at 10% 6%, #d8f2ec 0%, transparent 58%),
+    radial-gradient(760px 500px at 88% 94%, #ffefe0 0%, transparent 63%),
+    linear-gradient(180deg,var(--bg2),var(--bg));
+}
+input,textarea,select,button{font-family:inherit}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px}
+
+/* ════════ GRID NOISE OVERLAY ════════ */
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  opacity:.18;
+}
+body::after{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:linear-gradient(120deg,transparent 0%,#0e766e0d 42%,transparent 76%);
+}
+
+/* ════════ LOGIN ════════ */
+#loginScreen{
+  position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:999;
+  background:rgba(243,247,249,.86);
+  backdrop-filter:blur(6px);
+}
+#loginScreen::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse 60% 60% at 30% 50%,#0e766e17 0%,transparent 70%),
+             radial-gradient(ellipse 50% 50% at 75% 30%,#f9731615 0%,transparent 60%);
+}
+.login-wrap{
+  position:relative;width:420px;
+  background:linear-gradient(180deg,#ffffff,#f9fcfd);
+  border:1px solid var(--border2);border-radius:22px;
+  padding:44px 40px;box-shadow:0 22px 54px #102a431f;
+  overflow:hidden;
+}
+.login-wrap::after{
+  content:'';position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(135deg,transparent 30%,#0e766e10 82%,transparent 100%);
+}
+.login-eyebrow{
+  font-family:var(--mono);font-size:11px;letter-spacing:3px;text-transform:uppercase;
+  color:var(--accent);margin-bottom:10px;display:flex;align-items:center;gap:8px;
+}
+.login-eyebrow::before{content:'';width:24px;height:1px;background:var(--accent)}
+.login-h1{font-size:30px;font-weight:800;margin-bottom:6px;line-height:1.1}
+.login-sub{color:var(--sub);font-size:13px;margin-bottom:36px}
+.f{margin-bottom:16px}
+.f label{display:block;font-family:var(--mono);font-size:10px;letter-spacing:2px;
+  text-transform:uppercase;color:var(--sub);margin-bottom:7px}
+.f input{
+  width:100%;padding:12px 14px;background:var(--surface);
+  border:1px solid var(--border);border-radius:12px;
+  color:var(--text);font-size:14px;outline:none;transition:border-color .2s;
+}
+.f input:focus{border-color:var(--accent);box-shadow:0 0 0 3px #0e766e1a}
+.phone-row{display:flex;gap:8px}
+.phone-row .cc-input{width:72px!important;flex-shrink:0}
+.phone-row #phoneInput{flex:1;min-width:0;width:auto!important}
+.btn-main{
+  width:100%;padding:13px;border:none;border-radius:12px;
+  background:var(--accent);color:#fff;font-weight:700;font-size:14px;
+  cursor:pointer;transition:all .2s;letter-spacing:.3px;
+}
+.btn-main:hover{background:#0a5b55;transform:translateY(-1px);box-shadow:0 10px 26px #0e766e33}
+.btn-main:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:none}
+.otp-note{text-align:center;font-size:12px;color:var(--sub);margin-top:14px}
+.back-link{
+  background:none;border:none;color:var(--accent);cursor:pointer;
+  font-size:12px;text-decoration:underline;margin-top:8px;
+}
+#rc-container{margin:12px 0}
+.login-err{color:var(--red);font-size:12px;margin-top:8px;display:none}
+
+/* ════════ APP SHELL ════════ */
+#app{
+  display:none;
+  min-height:calc(100vh - 28px);
+  width:min(1480px, calc(100vw - 28px));
+  margin:14px auto;
+  border:1px solid var(--border2);
+  border-radius:var(--app-r);
+  overflow:hidden;
+  position:relative;
+  z-index:1;
+  background:linear-gradient(180deg,#fbfdfe,#f5f9fb);
+  box-shadow:
+    0 20px 48px #102a431a,
+    inset 0 1px 0 #ffffff;
+}
+#app::before{
+  content:'';
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  background:
+    radial-gradient(500px 220px at 35% -12%, #0e766e17 0%, transparent 72%),
+    radial-gradient(460px 220px at 82% -16%, #f9731615 0%, transparent 72%);
+}
+
+/* ── SIDEBAR ── */
+.sidebar{
+  position:absolute;top:0;left:0;width:236px;height:100%;
+  background:linear-gradient(180deg,#ffffff 0%,#f5fafb 100%);
+  border-right:1px solid var(--border);
+  display:flex;flex-direction:column;z-index:50;
+  box-shadow:inset -1px 0 0 #ffffff;
+}
+.sb-logo{padding:24px 20px 20px;border-bottom:1px solid var(--border)}
+.sb-logo-tag{font-family:var(--mono);font-size:9px;letter-spacing:3px;color:var(--accent);text-transform:uppercase}
+.sb-logo-name{font-size:19px;font-weight:800;margin-top:2px}
+.sb-logo-env{
+  display:inline-block;margin-top:6px;padding:2px 8px;border-radius:4px;
+  background:#e1f2ef;border:1px solid #b9d8d1;
+  font-family:var(--mono);font-size:9px;color:var(--accent);letter-spacing:1px;
+}
+nav{flex:1;padding:12px 10px;overflow-y:auto}
+.nav-item{
+  display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:11px;
+  cursor:pointer;color:var(--sub);font-size:13px;font-weight:500;
+  transition:all .15s;border:1px solid transparent;background:none;width:100%;text-align:left;
+  margin-bottom:2px;
+}
+.nav-item:hover{background:#f2f8fa;color:var(--text);border-color:#d2e1e8}
+.nav-item.active{
+  background:linear-gradient(130deg,#e1f2ef,#fff3e6);
+  color:var(--accent);
+  border-color:#b9d8d1;
+  font-weight:600;
+}
+.nav-item .ni{font-size:15px;width:18px;flex-shrink:0}
+.sb-footer{padding:16px;border-top:1px solid var(--border)}
+.user-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.user-av{
+  width:34px;height:34px;border-radius:50%;flex-shrink:0;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  display:flex;align-items:center;justify-content:center;
+  font-weight:800;font-size:12px;color:#000;
+}
+.user-name{font-size:13px;font-weight:600;line-height:1.2}
+.user-role{font-family:var(--mono);font-size:9px;color:var(--accent);letter-spacing:1px;text-transform:uppercase}
+.logout-btn{
+  width:100%;padding:7px;border-radius:6px;background:none;
+  border:1px solid var(--border);color:var(--sub);font-size:12px;
+  cursor:pointer;transition:all .15s;
+}
+.logout-btn:hover{border-color:var(--red);color:var(--red)}
+
+/* ── MAIN ── */
+.main{
+  margin-left:236px;
+  padding:30px;
+  min-height:calc(100vh - 28px);
+  position:relative;
+  z-index:1;
+  overflow-y:auto;
+}
+.page{display:none;animation:fadeUp .25s ease}
+.page.active{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.ph{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:26px;flex-wrap:wrap;gap:12px}
+.ph-left h2{font-size:22px;font-weight:800}
+.ph-left p{color:var(--sub);font-size:13px;margin-top:3px}
+
+/* ── STATS ── */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:28px}
+.stat{
+  background:linear-gradient(180deg,#ffffff,#f9fcfd);
+  border:1px solid var(--border);
+  border-radius:var(--r);
+  padding:18px 20px;position:relative;overflow:hidden;
+  box-shadow:0 10px 26px #102a430d;
+}
+.stat::after{
+  content:'';position:absolute;top:-20px;right:-20px;
+  width:70px;height:70px;border-radius:50%;opacity:.07;
+}
+.stat:nth-child(1)::after{background:var(--accent)}
+.stat:nth-child(2)::after{background:var(--accent2)}
+.stat:nth-child(3)::after{background:var(--amber)}
+.stat:nth-child(4)::after{background:var(--red)}
+.stat-l{font-family:var(--mono);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--sub);margin-bottom:6px}
+.stat-v{font-family:var(--mono);font-size:32px;font-weight:500;line-height:1}
+.stat:nth-child(1) .stat-v{color:var(--accent)}
+.stat:nth-child(2) .stat-v{color:var(--accent2)}
+.stat:nth-child(3) .stat-v{color:var(--amber)}
+.stat:nth-child(4) .stat-v{color:var(--red)}
+.stat-s{font-size:11px;color:var(--dim);margin-top:4px}
+
+/* ── TABLE CARD ── */
+.tcard{
+  background:linear-gradient(180deg,#ffffff,#f9fcfd);
+  border:1px solid var(--border);
+  border-radius:var(--r);
+  overflow:hidden;
+  margin-bottom:20px;
+  box-shadow:0 12px 28px #102a4310;
+}
+.tcard-head{
+  padding:14px 18px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.tcard-title{font-size:13px;font-weight:600}
+.tcard-count{font-family:var(--mono);font-size:11px;color:var(--sub);
+  background:var(--border);padding:2px 8px;border-radius:4px}
+table{width:100%;border-collapse:collapse}
+th{
+  padding:9px 18px;text-align:left;
+  font-family:var(--mono);font-size:9px;letter-spacing:2px;text-transform:uppercase;
+  color:var(--dim);border-bottom:1px solid var(--border);background:#f6fafc;
+}
+td{padding:13px 18px;border-bottom:1px solid #edf4f7;font-size:13px;vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#f5fafc}
+.empty{text-align:center;padding:50px 20px;color:var(--sub)}
+.empty-icon{font-size:36px;display:block;margin-bottom:10px}
+
+/* badges */
+.badge{
+  display:inline-flex;align-items:center;padding:2px 9px;border-radius:20px;
+  font-family:var(--mono);font-size:10px;letter-spacing:.5px;font-weight:500;
+}
+.badge-cyan{background:#e1f2ef;color:var(--accent);border:1px solid #b9d8d1}
+.badge-green{background:#e8f7f0;color:var(--success);border:1px solid #bfe5d0}
+.badge-amber{background:#fff3e6;color:var(--amber);border:1px solid #f7d7b2}
+.badge-red{background:#ffecef;color:var(--red);border:1px solid #f3c4cc}
+.badge-dim{background:#eef4f7;color:var(--sub);border:1px solid #d8e4ea}
+
+/* buttons */
+.btn{
+  padding:8px 14px;border-radius:9px;font-size:12px;font-weight:600;
+  cursor:pointer;border:none;transition:all .2s;display:inline-flex;align-items:center;gap:5px;
+}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{background:#0a5b55;transform:translateY(-1px);box-shadow:0 10px 22px #0e766e2c}
+.btn-ghost{background:#fff;border:1px solid var(--border);color:var(--sub)}
+.btn-ghost:hover{border-color:#9cb8c7;color:var(--text);background:#f8fcfd}
+.btn-danger{background:none;border:1px solid var(--border);color:var(--sub)}
+.btn-danger:hover{border-color:#e5a9b4;color:var(--red);background:#ffecef}
+.btn-success{background:var(--success);color:#fff}
+.btn-success:hover{background:#157a4c}
+
+/* ── GROUPS GRID ── */
+.ggrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+.gcard{
+  background:var(--card);border:1px solid var(--border);border-radius:var(--r);
+  padding:18px;cursor:pointer;transition:all .2s;
+}
+.gcard:hover{border-color:#9cc4bc;transform:translateY(-2px);box-shadow:0 12px 34px #102a4314}
+.gcard-name{font-size:15px;font-weight:700;margin-bottom:4px}
+.gcard-desc{font-size:12px;color:var(--sub);margin-bottom:14px;min-height:32px}
+.gcard-foot{display:flex;align-items:center;justify-content:space-between}
+.avatars{display:flex}
+.av{
+  width:24px;height:24px;border-radius:50%;border:2px solid var(--card);
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  display:flex;align-items:center;justify-content:center;
+  font-size:8px;font-weight:800;color:#000;margin-left:-5px;
+}
+.av:first-child{margin-left:0}
+.av-more{background:var(--border);color:var(--sub);font-size:8px}
+
+/* ── MODAL ── */
+.overlay{
+  display:none;position:fixed;inset:0;background:#102a4321;
+  backdrop-filter:blur(6px);z-index:200;align-items:center;justify-content:center;
+}
+.overlay.open{display:flex}
+.modal{
+  background:linear-gradient(180deg,#ffffff,#f9fcfd);
+  border:1px solid var(--border2);border-radius:18px;
+  width:520px;max-width:95vw;max-height:88vh;overflow-y:auto;
+  box-shadow:0 24px 58px #102a431f;animation:mIn .2s ease;
+}
+@keyframes mIn{from{opacity:0;transform:scale(.96) translateY(12px)}to{opacity:1;transform:none}}
+.mh{padding:20px 24px 16px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between}
+.mh-title{font-size:16px;font-weight:700}
+.mclose{background:none;border:none;color:var(--sub);font-size:18px;cursor:pointer;line-height:1;padding:2px}
+.mclose:hover{color:var(--text)}
+.mb{padding:20px 24px}
+.mf{margin-bottom:16px}
+.mf label{display:block;font-family:var(--mono);font-size:9px;letter-spacing:2px;
+  text-transform:uppercase;color:var(--sub);margin-bottom:6px}
+.mf input,.mf textarea,.mf select{
+  width:100%;padding:10px 12px;background:#fff;
+  border:1px solid var(--border);border-radius:10px;
+  color:var(--text);font-size:13px;outline:none;transition:border-color .2s;
+}
+.mf input:focus,.mf textarea:focus,.mf select:focus{
+  border-color:var(--accent);
+  box-shadow:0 0 0 3px #0e766e1a;
+}
+.mf textarea{resize:vertical;min-height:70px}
+.mf select option{background:var(--surface)}
+.mfoot{padding:12px 24px 20px;display:flex;justify-content:flex-end;gap:8px}
+
+/* chip selector */
+.chip-wrap{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.chip{
+  padding:4px 11px;border-radius:20px;font-size:11px;cursor:pointer;
+  border:1px solid var(--border);color:var(--sub);background:#fff;transition:all .15s;
+}
+.chip.on{border-color:#b9d8d1;background:#e1f2ef;color:var(--accent)}
+
+.ct-config-off{opacity:.55;pointer-events:none}
+.ct-note{font-size:11px;color:var(--sub);margin-top:6px}
+.f-builder-grid{
+  display:grid;
+  grid-template-columns:1fr 150px;
+  gap:8px;
+}
+.f-builder-row{
+  margin-top:8px;
+  display:flex;
+  gap:8px;
+  align-items:center;
+}
+.f-builder-row input{flex:1}
+.f-list{
+  margin-top:10px;
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+}
+.f-chip{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:6px 10px;
+  border-radius:999px;
+  border:1px solid #b9d8d1;
+  background:#e1f2ef;
+  color:var(--accent);
+  font-size:11px;
+}
+.f-chip-opt{color:var(--sub);font-family:var(--mono);font-size:10px}
+.f-chip-close{
+  border:none;
+  background:none;
+  color:var(--red);
+  cursor:pointer;
+  font-size:12px;
+  line-height:1;
+}
+
+/* response detail blocks */
+.rblock{background:var(--surface-variant);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px}
+.rblock-label{font-family:var(--mono);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--sub);margin-bottom:8px}
+.rblock-val{font-size:13px;line-height:1.7;color:var(--text)}
+.form-pair{display:flex;gap:10px;margin-bottom:5px;font-size:12px}
+.form-k{color:var(--sub);font-family:var(--mono);min-width:110px;flex-shrink:0}
+.form-v{color:var(--text)}
+.media-link{
+  display:inline-flex;align-items:center;gap:5px;padding:4px 10px;
+  border-radius:8px;background:#fff;border:1px solid var(--border);
+  color:var(--accent);font-size:11px;text-decoration:none;margin:3px;
+  transition:border-color .15s;
+}
+.media-link:hover{border-color:#9cc4bc}
+
+/* member rows */
+.mrow{
+  display:flex;align-items:center;gap:12px;padding:10px 0;
+  border-bottom:1px solid var(--border);
+}
+.mrow:last-child{border-bottom:none}
+.mav{
+  width:32px;height:32px;border-radius:50%;flex-shrink:0;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  display:flex;align-items:center;justify-content:center;
+  font-weight:800;font-size:11px;color:#000;
+}
+.minfo{flex:1}
+.mname{font-size:13px;font-weight:600}
+.mphone{font-family:var(--mono);font-size:11px;color:var(--sub)}
+
+/* toast */
+#toast{
+  position:fixed;bottom:24px;right:24px;z-index:9999;
+  background:var(--card);border:1px solid var(--border);border-radius:8px;
+  padding:12px 18px;font-size:13px;display:none;
+  box-shadow:0 14px 34px #102a431f;animation:tIn .2s ease;max-width:320px;
+}
+@keyframes tIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+#toast.success{border-color:#bfe5d0;color:var(--success)}
+#toast.error{border-color:#f3c4cc;color:var(--red)}
+
+/* search */
+.search-row{display:flex;align-items:center;gap:10px;margin-bottom:18px}
+.search-in{
+  flex:1;padding:9px 14px;background:#fff;border:1px solid var(--border);
+  border-radius:8px;color:var(--text);font-size:13px;outline:none;
+}
+.search-in:focus{border-color:var(--accent);box-shadow:0 0 0 3px #0e766e1a}
+
+/* loading */
+.spin{
+  display:inline-block;width:16px;height:16px;border:2px solid var(--border);
+  border-top-color:var(--accent);border-radius:50%;animation:spin .6s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-row{text-align:center;padding:40px;color:var(--sub)}
+
+/* checkbox row */
+.check-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;font-size:13px}
+.check-row input[type=checkbox]{width:14px;height:14px;accent-color:var(--accent)}
+
+/* divider */
+.divider{border:none;border-top:1px solid var(--border);margin:18px 0}
+
+/* complaint map */
+#complaint-detail-map{height:220px;border-radius:10px;overflow:hidden;margin-bottom:14px;border:1px solid var(--border)}
+#complaints-overview-map{height:340px;border-radius:var(--r);overflow:hidden;border:1px solid var(--border);margin-bottom:20px;box-shadow:0 8px 24px #102a430d}
+.badge-orange{background:#fff3e6;color:#d06000;border:1px solid #f5c080}
+.badge-purple{background:#f3eeff;color:#7c3aed;border:1px solid #c4b5fd}
+.upd-list{display:flex;flex-direction:column;gap:8px;margin-top:6px}
+.upd-item{background:#f8fcfd;border:1px solid var(--border);border-radius:8px;padding:10px 12px}
+.upd-item-meta{font-family:var(--mono);font-size:10px;color:var(--sub);margin-bottom:4px}
+.upd-item-text{font-size:13px;color:var(--text)}
+.cimg{width:100%;max-height:200px;object-fit:cover;border-radius:8px;margin-bottom:12px;border:1px solid var(--border)}
+/* 5-item nav on mobile */
+@media (max-width:980px){
+  nav{grid-template-columns:repeat(5,minmax(0,1fr))!important}
+}
+
+@media (max-width:1200px){
+  .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+
+@media (max-width:980px){
+  #app{
+    width:100%;
+    min-height:100vh;
+    margin:0;
+    border-radius:0;
+    border:none;
+    box-shadow:none;
+  }
+  .sidebar{
+    top:auto;
+    left:0;
+    right:0;
+    bottom:0;
+    width:100%;
+    height:76px;
+    border-right:none;
+    border-top:1px solid var(--border);
+    background:rgba(255,255,255,.94);
+    backdrop-filter:blur(16px);
+  }
+  .sb-logo,.sb-footer{display:none}
+  nav{
+    display:grid;
+    grid-template-columns:repeat(5,minmax(0,1fr));
+    height:100%;
+    padding:9px 10px;
+    gap:8px;
+  }
+  .nav-item{
+    margin:0;
+    justify-content:center;
+    flex-direction:column;
+    gap:3px;
+    padding:6px 4px;
+    font-size:10px;
+    border-radius:10px;
+  }
+  .nav-item .ni{width:auto;font-size:15px}
+  .main{
+    margin-left:0;
+    min-height:100vh;
+    padding:20px 14px 96px;
+  }
+  .tcard{overflow:auto}
+  table{min-width:640px}
+  #toast{
+    bottom:90px;
+    right:14px;
+    left:14px;
+    max-width:none;
+  }
+}
+
+@media (max-width:560px){
+  .login-wrap{
+    width:min(94vw,420px);
+    padding:34px 22px;
+  }
+  .stats{grid-template-columns:1fr}
+  .ph-left h2{font-size:20px}
+  .btn{padding:8px 12px}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════ LOGIN ═══ -->
+<div id="loginScreen">
+  <div class="login-wrap">
+    <div class="login-eyebrow">TaskApp</div>
+    <h1 class="login-h1">Admin<br/>Dashboard</h1>
+    <p class="login-sub">Sign in with your admin phone number</p>
+
+    <!-- Phone step -->
+    <div id="phoneStep">
+      <div class="f">
+        <label>Country Code</label>
+        <div class="phone-row">
+          <input class="cc-input" id="ccInput" value="+91" placeholder="+91" maxlength="4"/>
+          <input id="phoneInput" placeholder="98765 43210" type="tel" style="flex:1"/>
+        </div>
+      </div>
+      <div id="rc-container"></div>
+      <button class="btn-main" id="sendOtpBtn">Send OTP →</button>
+      <div class="login-err" id="phoneErr"></div>
+    </div>
+
+    <!-- OTP step -->
+    <div id="otpStep" style="display:none">
+      <p style="color:var(--sub);font-size:13px;margin-bottom:20px" id="otpHint"></p>
+      <div class="f">
+        <label>6-Digit OTP</label>
+        <input placeholder="• • • • • •" maxlength="6" type="number"
+               style="letter-spacing:8px;font-size:22px;text-align:center"
+               id="otpInput"/>
+      </div>
+      <button class="btn-main" id="verifyBtn">Verify & Enter →</button>
+      <div class="login-err" id="otpErr"></div>
+      <div style="text-align:center;margin-top:10px">
+        <button class="back-link" id="backToPhoneBtn">← Change number</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ APP ═══ -->
+<div id="app">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sb-logo">
+      <div class="sb-logo-tag">Admin Portal</div>
+      <div class="sb-logo-name">TaskApp</div>
+      <span class="sb-logo-env" id="envBadge">DEV</span>
+    </div>
+    <nav>
+      <button class="nav-item active" onclick="showPage('overview')" id="nav-overview">
+        <span class="ni">⬡</span> Overview
+      </button>
+      <button class="nav-item" onclick="showPage('tasks')" id="nav-tasks">
+        <span class="ni">◈</span> Tasks
+      </button>
+      <button class="nav-item" onclick="showPage('groups')" id="nav-groups">
+        <span class="ni">◉</span> Groups
+      </button>
+      <button class="nav-item" onclick="showPage('users')" id="nav-users">
+        <span class="ni">◎</span> Users
+      </button>
+      <button class="nav-item" onclick="showPage('complaints')" id="nav-complaints">
+        <span class="ni">📍</span> Complaints
+      </button>
+    </nav>
+    <div class="sb-footer">
+      <div class="user-row">
+        <div class="user-av" id="userAv">A</div>
+        <div>
+          <div class="user-name" id="userName">Admin</div>
+          <div class="user-role">Administrator</div>
+        </div>
+      </div>
+      <button class="logout-btn" onclick="logout()">Sign out</button>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="main">
+
+    <!-- ── OVERVIEW ── -->
+    <div class="page active" id="page-overview">
+      <div class="ph">
+        <div class="ph-left">
+          <h2>Overview</h2>
+          <p>Real-time snapshot of your task platform</p>
+        </div>
+        <button class="btn btn-primary" onclick="showPage('tasks');openCreateTask()">＋ New Task</button>
+      </div>
+      <div class="stats">
+        <div class="stat"><div class="stat-l">Total Tasks</div><div class="stat-v" id="st-tasks">—</div><div class="stat-s">All time</div></div>
+        <div class="stat"><div class="stat-l">Active Tasks</div><div class="stat-v" id="st-active">—</div><div class="stat-s">In progress</div></div>
+        <div class="stat"><div class="stat-l">Groups</div><div class="stat-v" id="st-groups">—</div><div class="stat-s">Created</div></div>
+        <div class="stat"><div class="stat-l">Users</div><div class="stat-v" id="st-users">—</div><div class="stat-s">Registered</div></div>
+      </div>
+      <div class="stats" style="grid-template-columns:repeat(4,1fr)">
+        <div class="stat"><div class="stat-l">Total Complaints</div><div class="stat-v" id="st-cmp-total">—</div><div class="stat-s">All time</div></div>
+        <div class="stat"><div class="stat-l">Pending</div><div class="stat-v" id="st-cmp-pending">—</div><div class="stat-s">Awaiting review</div></div>
+        <div class="stat"><div class="stat-l">In Progress</div><div class="stat-v" id="st-cmp-inprog">—</div><div class="stat-s">Being resolved</div></div>
+        <div class="stat"><div class="stat-l">Resolved</div><div class="stat-v" id="st-cmp-resolved">—</div><div class="stat-s">Completed</div></div>
+      </div>
+      <div class="tcard">
+        <div class="tcard-head">
+          <span class="tcard-title">Recent Tasks</span>
+          <button class="btn btn-ghost" onclick="showPage('tasks')">View all →</button>
+        </div>
+        <table>
+          <thead><tr><th>Task</th><th>Groups</th><th>Status</th><th>Responses</th><th>Created</th></tr></thead>
+          <tbody id="overview-tasks-body"><tr><td colspan="5" class="loading-row"><span class="spin"></span></td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── TASKS ── -->
+    <div class="page" id="page-tasks">
+      <div class="ph">
+        <div class="ph-left"><h2>Tasks</h2><p>Create and manage broadcast tasks</p></div>
+        <button class="btn btn-primary" onclick="openCreateTask()">＋ New Task</button>
+      </div>
+      <div class="search-row">
+        <input class="search-in" placeholder="Search tasks..." oninput="filterTasks(this.value)"/>
+      </div>
+      <div class="tcard">
+        <div class="tcard-head">
+          <span class="tcard-title">All Tasks</span>
+          <span class="tcard-count" id="tasks-count">0</span>
+        </div>
+        <table>
+          <thead><tr><th>Title</th><th>Target Groups</th><th>Status</th><th>Deadline</th><th>Actions</th></tr></thead>
+          <tbody id="tasks-body"><tr><td colspan="5" class="loading-row"><span class="spin"></span></td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── GROUPS ── -->
+    <div class="page" id="page-groups">
+      <div class="ph">
+        <div class="ph-left"><h2>Groups</h2><p>Manage teams and members</p></div>
+        <button class="btn btn-primary" onclick="openCreateGroup()">＋ New Group</button>
+      </div>
+      <div id="groups-grid" class="ggrid">
+        <div class="loading-row" style="grid-column:1/-1"><span class="spin"></span></div>
+      </div>
+    </div>
+
+    <!-- ── USERS ── -->
+    <div class="page" id="page-users">
+      <div class="ph">
+        <div class="ph-left"><h2>Users</h2><p>All registered users</p></div>
+      </div>
+      <div class="search-row">
+        <input class="search-in" placeholder="Search by name or phone..." oninput="filterUsers(this.value)"/>
+      </div>
+      <div class="tcard">
+        <div class="tcard-head">
+          <span class="tcard-title">All Users</span>
+          <span class="tcard-count" id="users-count">0</span>
+        </div>
+        <table>
+          <thead><tr><th>Name</th><th>Phone</th><th>Role</th><th>Groups</th><th>Actions</th></tr></thead>
+          <tbody id="users-body"><tr><td colspan="5" class="loading-row"><span class="spin"></span></td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── COMPLAINTS ── -->
+    <div class="page" id="page-complaints">
+      <div class="ph">
+        <div class="ph-left"><h2>Complaints</h2><p>Track, update and assign public complaints for field verification</p></div>
+        <button class="btn btn-ghost" onclick="window.open('complaints.html','_blank')">🌐 Public Portal →</button>
+      </div>
+      <div class="stats" style="grid-template-columns:repeat(4,1fr)">
+        <div class="stat"><div class="stat-l">Total</div><div class="stat-v" id="cp-total">—</div></div>
+        <div class="stat"><div class="stat-l">Pending</div><div class="stat-v" id="cp-pending">—</div></div>
+        <div class="stat"><div class="stat-l">In Progress</div><div class="stat-v" id="cp-inprog">—</div></div>
+        <div class="stat"><div class="stat-l">Resolved</div><div class="stat-v" id="cp-resolved">—</div></div>
+      </div>
+      <!-- Complaints Overview Map -->
+      <div class="tcard" style="overflow:visible;margin-bottom:20px">
+        <div class="tcard-head">
+          <span class="tcard-title">📍 Complaint Locations</span>
+          <span class="tcard-count" id="complaints-map-count">0 pins</span>
+        </div>
+        <div id="complaints-overview-map"></div>
+      </div>
+
+      <div class="search-row">
+        <input class="search-in" id="complaints-search" placeholder="Search by title, reporter, phone…" oninput="filterComplaints()"/>
+        <select id="complaints-status-filter" onchange="filterComplaints()" style="padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;background:#fff;color:var(--text);outline:none">
+          <option value="">All Status</option>
+          <option value="PENDING">Pending</option>
+          <option value="IN_PROGRESS">In Progress</option>
+          <option value="RESOLVED">Resolved</option>
+          <option value="REJECTED">Rejected</option>
+        </select>
+      </div>
+      <div class="tcard">
+        <div class="tcard-head">
+          <span class="tcard-title">All Complaints</span>
+          <span class="tcard-count" id="complaints-count">0</span>
+        </div>
+        <table>
+          <thead><tr><th>Reporter</th><th>Category</th><th>Title</th><th>Location</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead>
+          <tbody id="complaints-body"><tr><td colspan="7" class="loading-row"><span class="spin"></span></td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ═══════════════════ MODALS ═══════════════════ -->
+
+<!-- Create Task -->
+<div class="overlay" id="m-createTask">
+  <div class="modal">
+    <div class="mh"><span class="mh-title">Create New Task</span><button class="mclose" onclick="closeModal('m-createTask')">✕</button></div>
+    <div class="mb">
+      <div class="mf"><label>Task Title *</label><input id="ct-title" placeholder="e.g. Daily Site Report"/></div>
+      <div class="mf"><label>Description</label><textarea id="ct-desc" placeholder="What should users submit?"></textarea></div>
+      <div class="mf">
+        <label>Target Groups * (select one or more)</label>
+        <div class="chip-wrap" id="ct-groups-chips"></div>
+      </div>
+      <div class="mf"><label>Deadline (optional)</label><input id="ct-deadline" type="date"/></div>
+      <hr class="divider"/>
+      <div class="mf">
+        <label>Allowed Submission Types</label>
+        <div class="check-row"><input type="checkbox" id="ct-forms" checked/><label for="ct-forms">Forms (structured fields)</label></div>
+        <div class="check-row"><input type="checkbox" id="ct-media" checked/><label for="ct-media">Media (images, video, documents)</label></div>
+        <div class="check-row"><input type="checkbox" id="ct-msg" checked/><label for="ct-msg">Message (free text)</label></div>
+        <div class="ct-note">Select at least one submission type.</div>
+      </div>
+
+      <div class="mf" id="ct-forms-config">
+        <label>Form Fields</label>
+        <div class="f-builder-grid">
+          <input id="ct-field-label" placeholder="Field label (e.g. Site Name)"/>
+          <select id="ct-field-type">
+            <option value="TEXT">Text</option>
+            <option value="NUMBER">Number</option>
+            <option value="DATE">Date</option>
+            <option value="DROPDOWN">Dropdown</option>
+            <option value="CHECKBOX">Checkbox</option>
+          </select>
+        </div>
+        <div class="f-builder-row" id="ct-field-options-wrap" style="display:none">
+          <input id="ct-field-options" placeholder="Options (comma separated)"/>
+        </div>
+        <div class="check-row" style="margin-top:8px">
+          <input type="checkbox" id="ct-field-required"/>
+          <label for="ct-field-required">Required field</label>
+          <button class="btn btn-ghost" style="margin-left:auto" type="button" onclick="addFormField()">Add Field</button>
+        </div>
+        <div class="f-list" id="ct-fields-list"></div>
+        <div class="ct-note">If Forms is enabled, add at least one field.</div>
+      </div>
+
+      <div class="mf" id="ct-msg-config">
+        <label>Message Prompt (optional)</label>
+        <input id="ct-msg-prompt" placeholder="Example: Share blockers or daily updates"/>
+      </div>
+    </div>
+    <div class="mfoot">
+      <button class="btn btn-ghost" onclick="closeModal('m-createTask')">Cancel</button>
+      <button class="btn btn-primary" onclick="createTask()">Create &amp; Broadcast →</button>
+    </div>
+  </div>
+</div>
+
+<!-- Task Responses -->
+<div class="overlay" id="m-responses">
+  <div class="modal" style="width:620px">
+    <div class="mh">
+      <div>
+        <div class="mh-title" id="resp-task-title">Responses</div>
+        <div style="font-size:11px;color:var(--sub);margin-top:2px" id="resp-task-sub"></div>
+      </div>
+      <button class="mclose" onclick="closeModal('m-responses')">✕</button>
+    </div>
+    <div class="mb" id="resp-body">
+      <div class="loading-row"><span class="spin"></span></div>
+    </div>
+  </div>
+</div>
+
+<!-- Create Group -->
+<div class="overlay" id="m-createGroup">
+  <div class="modal">
+    <div class="mh"><span class="mh-title">Create Group</span><button class="mclose" onclick="closeModal('m-createGroup')">✕</button></div>
+    <div class="mb">
+      <div class="mf"><label>Group Name *</label><input id="cg-name" placeholder="e.g. North Zone Field Team"/></div>
+      <div class="mf"><label>Description</label><input id="cg-desc" placeholder="What does this group do?"/></div>
+    </div>
+    <div class="mfoot">
+      <button class="btn btn-ghost" onclick="closeModal('m-createGroup')">Cancel</button>
+      <button class="btn btn-primary" onclick="createGroup()">Create Group</button>
+    </div>
+  </div>
+</div>
+
+<!-- Group Detail -->
+<div class="overlay" id="m-groupDetail">
+  <div class="modal">
+    <div class="mh">
+      <div>
+        <div class="mh-title" id="gd-title">Group</div>
+        <div style="font-size:11px;color:var(--sub);margin-top:2px" id="gd-sub"></div>
+      </div>
+      <button class="mclose" onclick="closeModal('m-groupDetail')">✕</button>
+    </div>
+    <div class="mb">
+      <div style="display:flex;gap:8px;margin-bottom:16px">
+        <input class="search-in" id="add-member-phone" placeholder="+91 phone number to add" style="flex:1;margin:0"/>
+        <button class="btn btn-success" onclick="addMember()">Add</button>
+      </div>
+      <div id="gd-members"></div>
+    </div>
+    <div class="mfoot">
+      <button class="btn btn-danger" onclick="deleteGroup()">Delete Group</button>
+      <button class="btn btn-ghost" onclick="closeModal('m-groupDetail')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Promote User -->
+<div class="overlay" id="m-userDetail">
+  <div class="modal" style="width:400px">
+    <div class="mh"><span class="mh-title" id="ud-title">User</span><button class="mclose" onclick="closeModal('m-userDetail')">✕</button></div>
+    <div class="mb" id="ud-body"></div>
+    <div class="mfoot" id="ud-foot"></div>
+  </div>
+</div>
+
+<!-- Complaint Detail Modal -->
+<div class="overlay" id="m-complaint-detail">
+  <div class="modal" style="width:640px">
+    <div class="mh">
+      <div>
+        <div class="mh-title" id="cd-title">Complaint Detail</div>
+        <div style="font-size:11px;color:var(--sub);margin-top:2px" id="cd-sub"></div>
+      </div>
+      <button class="mclose" onclick="closeModal('m-complaint-detail')">✕</button>
+    </div>
+    <div class="mb">
+      <div id="cd-map" class="complaint-detail-map" style="height:220px;border-radius:10px;overflow:hidden;margin-bottom:14px;border:1px solid var(--border)"></div>
+      <img id="cd-image" class="cimg" src="" style="display:none"/>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+        <div class="rblock"><div class="rblock-label">Reporter</div><div class="rblock-val" id="cd-reporter">—</div></div>
+        <div class="rblock"><div class="rblock-label">Phone</div><div class="rblock-val" id="cd-phone">—</div></div>
+        <div class="rblock"><div class="rblock-label">Category</div><div class="rblock-val" id="cd-category">—</div></div>
+        <div class="rblock"><div class="rblock-label">Location</div><div class="rblock-val" id="cd-location">—</div></div>
+      </div>
+      <div class="rblock" style="margin-bottom:14px"><div class="rblock-label">Description</div><div class="rblock-val" id="cd-description">—</div></div>
+
+      <div style="display:flex;gap:10px;align-items:center;margin-bottom:18px">
+        <label style="font-family:var(--mono);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--sub);flex-shrink:0">Update Status</label>
+        <select id="cd-status-select" style="flex:1;padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;background:#fff;color:var(--text);outline:none">
+          <option value="PENDING">Pending</option>
+          <option value="IN_PROGRESS">In Progress</option>
+          <option value="RESOLVED">Resolved</option>
+          <option value="REJECTED">Rejected</option>
+        </select>
+        <button class="btn btn-primary" onclick="updateComplaintStatus()">Save Status</button>
+      </div>
+
+      <div class="mf">
+        <label>Add Public Update (visible to reporter)</label>
+        <textarea id="cd-update-text" placeholder="e.g. Our team has been dispatched and will address this within 48 hours…" style="min-height:70px"></textarea>
+      </div>
+      <button class="btn btn-success" style="width:100%;margin-bottom:18px" onclick="addAdminUpdate()">Post Update →</button>
+
+      <div style="margin-bottom:14px">
+        <div style="font-family:var(--mono);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--sub);margin-bottom:8px">Admin Updates</div>
+        <div class="upd-list" id="cd-updates-list"><div style="color:var(--sub);font-size:12px">No updates yet</div></div>
+      </div>
+
+      <button class="btn btn-ghost" style="width:100%" onclick="openSendVerificationTask()">📋 Send Verification Task to Field Team →</button>
+    </div>
+  </div>
+</div>
+
+<!-- Send Verification Task Modal -->
+<div class="overlay" id="m-verify-task">
+  <div class="modal" style="width:480px">
+    <div class="mh"><span class="mh-title">Send Verification Task</span><button class="mclose" onclick="closeModal('m-verify-task')">✕</button></div>
+    <div class="mb">
+      <div class="mf"><label>Task Title *</label><input id="vt-title" placeholder="e.g. Verify pothole at MG Road"/></div>
+      <div class="mf"><label>Instructions</label><textarea id="vt-desc" placeholder="What should the field team verify and submit?"></textarea></div>
+      <div class="mf">
+        <label>Assign to Groups *</label>
+        <div class="chip-wrap" id="vt-groups-chips"></div>
+      </div>
+      <div class="mf"><label>Deadline (optional)</label><input id="vt-deadline" type="date"/></div>
+    </div>
+    <div class="mfoot">
+      <button class="btn btn-ghost" onclick="closeModal('m-verify-task')">Cancel</button>
+      <button class="btn btn-primary" onclick="sendVerificationTask()">Send Task →</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<!-- ═══════════════════════════════════════════════ FIREBASE + JS ═══ -->
+<!-- Guard: define window stubs immediately so no onclick ever throws "not defined" -->
+<script>
+(function() {
+  var LOADING_ERR = function(name) {
+    return function() {
+      var el = document.getElementById('phoneErr');
+      if (el) { el.textContent = 'App is still loading — please wait and try again.'; el.style.display = 'block'; }
+      console.warn(name + ' called before Firebase loaded');
+    };
+  };
+  // Login stubs (overridden once Firebase loads)
+  ['sendOtp','verifyOtp','backToPhone','logout',
+   'showPage','openCreateTask','openCreateGroup','createTask','createGroup','createTaskFromComplaint',
+   'addMember','deleteGroup','openGroupDetail','openUserDetail','toggleAdmin',
+   'openResponses','archiveTask','deleteTask','removeMember','closeModal','addFormField','removeFormField'].forEach(function(fn) {
+    window[fn] = window[fn] || LOADING_ERR(fn);
+  });
+})();
+</script>
+<!-- Firebase compat SDK — loads as plain globals, no ES module issues -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+
+// ── FIREBASE CONFIG ──────────────────────────────────────────────────────────
+firebase.initializeApp({
+  apiKey: "AIzaSyCm0mMgaed3w1gOFF3LzqbDjy3ELspFVPY",
+  authDomain: "taskapp-cd2c0.firebaseapp.com",
+  projectId: "taskapp-cd2c0",
+  storageBucket: "taskapp-cd2c0.firebasestorage.app",
+  messagingSenderId: "9386144641",
+  appId: "1:9386144641:web:96ad409f1e74e8eef4ee80"
+});
+// Change to "prod_" for production data
+const PREFIX = "dev_";
+// ─────────────────────────────────────────────────────────────────────────────
+
+const auth = firebase.auth();
+const db   = firebase.firestore();
+
+// Required for Firebase test phone numbers (bypasses reCAPTCHA for test numbers)
+auth.settings.appVerificationDisabledForTesting = true;
+const W    = window;
+
+window.addEventListener('unhandledrejection', e => {
+  console.error('Unhandled error:', e.reason);
+  const err = document.getElementById('phoneErr');
+  if (err) { err.textContent = 'App error: ' + (e.reason?.message || String(e.reason)); err.style.display = 'block'; }
+});
+
+// ── COLLECTIONS ──────────────────────────────────────────────────────────────
+const col = {
+  users:  () => db.collection(`${PREFIX}users`),
+  groups: () => db.collection(`${PREFIX}groups`),
+  tasks:  () => db.collection(`${PREFIX}tasks`),
+  responses: (taskId) => db.collection(`${PREFIX}tasks/${taskId}/responses`)
+};
+
+// ── STATE ─────────────────────────────────────────────────────────────────────
+let currentUser = null;
+let allTasks    = [];
+let allGroups   = [];
+let allUsers    = [];
+let activeGroupId = null;
+let confirmationResult = null;
+let ctFormFields = [];
+
+// ── AUTH ──────────────────────────────────────────────────────────────────────
+let recaptchaVerifier = null;
+
+function resetRecaptcha() {
+  // Always destroy the old verifier before creating a new one
+  if (recaptchaVerifier) {
+    try { recaptchaVerifier.clear(); } catch(_) {}
+    recaptchaVerifier = null;
+  }
+  document.getElementById('rc-container').innerHTML = '';
+}
+
+function initRecaptcha() {
+  resetRecaptcha();
+  if (auth.settings.appVerificationDisabledForTesting) {
+    // Testing mode: Firebase ignores the verifier, but a real RecaptchaVerifier
+    // crashes trying to load the reCAPTCHA iframe. Use a dummy object instead.
+    // Stub every method Firebase internally calls on a verifier
+    recaptchaVerifier = {
+      type: 'recaptcha',
+      verify:  () => Promise.resolve('test-token'),
+      clear:   () => {},
+      render:  () => Promise.resolve(0),
+      reset:   () => {},
+      _reset:  () => {},
+      _destroy:() => {}
+    };
+  } else {
+    recaptchaVerifier = new firebase.auth.RecaptchaVerifier('rc-container', {
+      size: 'invisible',
+      callback: () => {}
+    });
+  }
+}
+
+W.sendOtp = async () => {
+  const cc    = document.getElementById('ccInput').value.trim();
+  const num   = document.getElementById('phoneInput').value.trim();
+  const phone = cc + num.replace(/\s/g, '');
+  if (phone.length < 10) { showLoginErr('phoneErr','Enter a valid phone number'); return; }
+
+  const btn = document.getElementById('sendOtpBtn');
+  btn.disabled = true; btn.textContent = 'Sending…';
+  hideErr('phoneErr');
+
+  try {
+    initRecaptcha(); // fresh verifier every attempt
+    confirmationResult = await auth.signInWithPhoneNumber(phone, recaptchaVerifier);
+    // OTP sent successfully — show OTP step regardless of post-send verifier cleanup errors
+    document.getElementById('otpHint').textContent = `OTP sent to ${phone}`;
+    document.getElementById('phoneStep').style.display = 'none';
+    document.getElementById('otpStep').style.display   = 'block';
+  } catch(e) {
+    // If we already have a confirmationResult the OTP was sent — don't treat as failure
+    if (confirmationResult) {
+      document.getElementById('otpHint').textContent = `OTP sent to ${phone}`;
+      document.getElementById('phoneStep').style.display = 'none';
+      document.getElementById('otpStep').style.display   = 'block';
+      return;
+    }
+    resetRecaptcha(); // clear on failure so next attempt starts clean
+    showLoginErr('phoneErr', e.message || 'Failed to send OTP');
+    btn.disabled = false; btn.textContent = 'Send OTP →';
+  }
+};
+
+W.verifyOtp = async () => {
+  const otp = document.getElementById('otpInput').value.trim();
+  if (otp.length < 6) { showLoginErr('otpErr','Enter 6 digits'); return; }
+  const btn = document.getElementById('verifyBtn');
+  btn.disabled = true; btn.textContent = 'Verifying…';
+  hideErr('otpErr');
+
+  try {
+    const cred = await confirmationResult.confirm(otp);
+    const uid  = cred.user.uid;
+    const phone = cred.user.phoneNumber;
+    // ensure user doc exists
+    const uref = db.collection(`${PREFIX}users`).doc(uid);
+    const usnap = await uref.get();
+    if (!usnap.exists) {
+      await uref.set({ uid, phone, name:'', role:'USER', groupIds:[], fcmToken:'', createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+    }
+  } catch(e) {
+    showLoginErr('otpErr', 'Invalid OTP — try again');
+    btn.disabled = false; btn.textContent = 'Verify & Enter →';
+  }
+};
+
+W.backToPhone = () => {
+  resetRecaptcha();
+  confirmationResult = null;
+  document.getElementById('otpStep').style.display   = 'none';
+  document.getElementById('phoneStep').style.display = 'block';
+  document.getElementById('sendOtpBtn').disabled = false;
+  document.getElementById('sendOtpBtn').textContent = 'Send OTP →';
+};
+
+W.logout = async () => { await auth.signOut(); location.reload(); };
+
+auth.onAuthStateChanged( async (user) => {
+  if (!user) { showLogin(); return; }
+  const snap = await db.collection(`${PREFIX}users`).doc(user.uid).get();
+  if (!snap.exists || snap.data().role !== 'ADMIN') {
+    showLogin();
+    toast('Access denied. Admin accounts only.', 'error');
+    await auth.signOut();
+    return;
+  }
+  currentUser = { ...snap.data(), uid: user.uid };
+  bootApp();
+});
+
+function showLogin() {
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+}
+
+function bootApp() {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('envBadge').textContent = PREFIX === 'prod_' ? 'PRODUCTION' : 'DEVELOPMENT';
+  document.getElementById('userName').textContent  = currentUser.name || currentUser.phone;
+  document.getElementById('userAv').textContent    = (currentUser.name || currentUser.phone || 'A')[0].toUpperCase();
+  loadAll();
+}
+
+// ── DATA LOADING ──────────────────────────────────────────────────────────────
+function loadAll() {
+  listenTasks();
+  listenGroups();
+  listenUsers();
+}
+
+function listenTasks() {
+  const q = col.tasks().orderBy('createdAt','desc');
+  q.onSnapshot(snap => {
+    allTasks = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderStats();
+    renderOverviewTasks();
+    renderTasks();
+  });
+}
+
+function listenGroups() {
+  const q = col.groups().orderBy('createdAt','desc');
+  q.onSnapshot(snap => {
+    allGroups = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderStats();
+    renderGroups();
+  });
+}
+
+function listenUsers() {
+  col.users().onSnapshot(snap => {
+    allUsers = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderStats();
+    renderUsers();
+  });
+}
+
+// ── STATS ─────────────────────────────────────────────────────────────────────
+function renderStats() {
+  document.getElementById('st-tasks').textContent  = allTasks.length;
+  document.getElementById('st-active').textContent = allTasks.filter(t => t.status === 'ACTIVE').length;
+  document.getElementById('st-groups').textContent = allGroups.length;
+  document.getElementById('st-users').textContent  = allUsers.length;
+}
+
+// ── OVERVIEW ──────────────────────────────────────────────────────────────────
+function renderOverviewTasks() {
+  const tbody = document.getElementById('overview-tasks-body');
+  const tasks = allTasks.slice(0, 8);
+  if (!tasks.length) { tbody.innerHTML = `<tr><td colspan="5" class="empty"><span class="empty-icon">◈</span><p>No tasks yet</p></td></tr>`; return; }
+  tbody.innerHTML = tasks.map(t => `
+    <tr>
+      <td><strong>${esc(t.title)}</strong></td>
+      <td>${(t.targetGroupNames||[]).map(g=>`<span class="badge badge-dim">${esc(g)}</span>`).join(' ') || '—'}</td>
+      <td>${statusBadge(t.status)}</td>
+      <td><button class="btn btn-ghost" onclick="W.openResponses('${t.id}','${esc(t.title)}')">View</button></td>
+      <td style="color:var(--sub);font-family:var(--mono);font-size:11px">${fmtDate(t.createdAt)}</td>
+    </tr>`).join('');
+}
+
+// ── TASKS ─────────────────────────────────────────────────────────────────────
+function renderTasks(filter = '') {
+  const tbody = document.getElementById('tasks-body');
+  let tasks = allTasks;
+  if (filter) tasks = tasks.filter(t => t.title?.toLowerCase().includes(filter.toLowerCase()));
+  document.getElementById('tasks-count').textContent = tasks.length;
+  if (!tasks.length) { tbody.innerHTML = `<tr><td colspan="5" class="empty"><span class="empty-icon">◈</span><p>No tasks found</p></td></tr>`; return; }
+  tbody.innerHTML = tasks.map(t => `
+    <tr>
+      <td>
+        <strong>${esc(t.title)}</strong>
+        <div style="font-size:11px;color:var(--sub);margin-top:2px">${esc((t.description||'').slice(0,60))}${(t.description||'').length>60?'…':''}</div>
+        <div style="margin-top:6px">${submissionModeBadges(t)}</div>
+      </td>
+      <td>${(t.targetGroupNames||[]).map(g=>`<span class="badge badge-dim">${esc(g)}</span>`).join(' ')||'—'}</td>
+      <td>${statusBadge(t.status)}</td>
+      <td style="font-family:var(--mono);font-size:11px;color:var(--sub)">${t.deadline ? fmtTs(t.deadline) : '—'}</td>
+      <td style="display:flex;gap:6px;align-items:center">
+        <button class="btn btn-ghost" onclick="W.openResponses('${t.id}','${esc(t.title)}')">Responses</button>
+        <button class="btn btn-danger" onclick="W.archiveTask('${t.id}','${t.status}')">
+          ${t.status==='ARCHIVED'?'Restore':'Archive'}
+        </button>
+        <button class="btn btn-danger" onclick="W.deleteTask('${t.id}','${esc(t.title)}')">Delete</button>
+      </td>
+    </tr>`).join('');
+}
+
+W.filterTasks = (v) => renderTasks(v);
+
+W.archiveTask = async (id, currentStatus) => {
+  const newStatus = currentStatus === 'ARCHIVED' ? 'ACTIVE' : 'ARCHIVED';
+  await db.collection(`${PREFIX}tasks`).doc(id).update({ status: newStatus });
+  toast(`Task ${newStatus === 'ARCHIVED' ? 'archived' : 'restored'}`, 'success');
+};
+
+W.deleteTask = async (taskId, taskTitle) => {
+  const label = taskTitle || 'this task';
+  if (!confirm(`Delete "${label}" and all responses?`)) return;
+  try {
+    const respSnap = await col.responses(taskId).get();
+    const docs = [...respSnap.docs];
+    while (docs.length) {
+      const batch = db.batch();
+      docs.splice(0, 400).forEach(doc => batch.delete(doc.ref));
+      await batch.commit();
+    }
+    await db.collection(`${PREFIX}tasks`).doc(taskId).delete();
+    toast('Task deleted', 'success');
+  } catch (e) {
+    toast(`Delete failed: ${e.message || e}`, 'error');
+  }
+};
+
+// ── GROUPS ────────────────────────────────────────────────────────────────────
+function renderGroups() {
+  const grid = document.getElementById('groups-grid');
+  if (!allGroups.length) {
+    grid.innerHTML = `<div class="empty" style="grid-column:1/-1"><span class="empty-icon">◉</span><p>No groups yet. Create one to get started.</p></div>`;
+    return;
+  }
+  grid.innerHTML = allGroups.map(g => {
+    const members = g.memberIds || [];
+    const shown   = members.slice(0, 4);
+    const extra   = members.length - shown.length;
+    return `
+    <div class="gcard" onclick="W.openGroupDetail('${g.id}')">
+      <div class="gcard-name">${esc(g.name)}</div>
+      <div class="gcard-desc">${esc(g.description || 'No description')}</div>
+      <div class="gcard-foot">
+        <div class="avatars">
+          ${shown.map((_,i)=>`<div class="av">${String.fromCharCode(65+i)}</div>`).join('')}
+          ${extra > 0 ? `<div class="av av-more">+${extra}</div>` : ''}
+          ${!members.length ? `<span style="font-size:11px;color:var(--sub)">No members</span>` : ''}
+        </div>
+        <span class="badge badge-dim">${members.length} member${members.length!==1?'s':''}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+W.openGroupDetail = async (groupId) => {
+  activeGroupId = groupId;
+  const g = allGroups.find(x => x.id === groupId);
+  if (!g) return;
+  document.getElementById('gd-title').textContent = g.name;
+  document.getElementById('gd-sub').textContent   = g.description || '';
+  renderGroupMembers(g);
+  openModal('m-groupDetail');
+};
+
+async function renderGroupMembers(group) {
+  const cont = document.getElementById('gd-members');
+  const ids  = group.memberIds || [];
+  if (!ids.length) {
+    cont.innerHTML = `<div style="text-align:center;padding:24px;color:var(--sub);font-size:13px">No members yet. Add by phone number above.</div>`;
+    return;
+  }
+  cont.innerHTML = `<div class="loading-row"><span class="spin"></span></div>`;
+  const members = await Promise.all(ids.map(async uid => {
+    const s = await db.collection(`${PREFIX}users`).doc(uid).get();
+    return s.exists ? { uid, ...s.data() } : { uid, name:'Unknown', phone:uid };
+  }));
+  cont.innerHTML = members.map(m => `
+    <div class="mrow">
+      <div class="mav">${(m.name||m.phone||'?')[0].toUpperCase()}</div>
+      <div class="minfo">
+        <div class="mname">${esc(m.name||'Unnamed')}</div>
+        <div class="mphone">${esc(m.phone||'')}</div>
+      </div>
+      <button class="btn btn-danger" onclick="W.removeMember('${m.uid}')">Remove</button>
+    </div>`).join('');
+}
+
+W.addMember = async () => {
+  const phone = document.getElementById('add-member-phone').value.trim();
+  if (!phone) { toast('Enter a phone number','error'); return; }
+
+  const q = col.users().where('phone','==', phone);
+  const snap = await q.get();
+  if (snap.empty) { toast('No user found with that number','error'); return; }
+
+  const user = snap.docs[0];
+  const gref = db.collection(`${PREFIX}groups`).doc(activeGroupId);
+  const uref = db.collection(`${PREFIX}users`).doc(user.id);
+  await gref.update({ memberIds: firebase.firestore.FieldValue.arrayUnion(user.id) });
+  await uref.update({ groupIds:  firebase.firestore.FieldValue.arrayUnion(activeGroupId) });
+
+  document.getElementById('add-member-phone').value = '';
+  toast(`${user.data().name || user.data().phone} added to group`, 'success');
+  const g = allGroups.find(x => x.id === activeGroupId);
+  if (g) { g.memberIds = [...(g.memberIds||[]), user.id]; renderGroupMembers(g); }
+};
+
+W.removeMember = async (uid) => {
+  const gref = db.collection(`${PREFIX}groups`).doc(activeGroupId);
+  const uref = db.collection(`${PREFIX}users`).doc(uid);
+  await gref.update({ memberIds: firebase.firestore.FieldValue.arrayRemove(uid) });
+  await uref.update({ groupIds:  firebase.firestore.FieldValue.arrayRemove(activeGroupId) });
+  toast('Member removed', 'success');
+  const g = allGroups.find(x => x.id === activeGroupId);
+  if (g) { g.memberIds = (g.memberIds||[]).filter(x=>x!==uid); renderGroupMembers(g); }
+};
+
+W.deleteGroup = async () => {
+  if (!confirm('Delete this group? This cannot be undone.')) return;
+  await db.collection(`${PREFIX}groups`).doc(activeGroupId).delete();
+  closeModal('m-groupDetail');
+  toast('Group deleted', 'success');
+};
+
+// ── USERS ─────────────────────────────────────────────────────────────────────
+function renderUsers(filter = '') {
+  const tbody = document.getElementById('users-body');
+  let users = allUsers;
+  if (filter) users = users.filter(u =>
+    (u.name||'').toLowerCase().includes(filter.toLowerCase()) ||
+    (u.phone||'').includes(filter)
+  );
+  document.getElementById('users-count').textContent = users.length;
+  if (!users.length) { tbody.innerHTML = `<tr><td colspan="5" class="empty"><span class="empty-icon">◎</span><p>No users found</p></td></tr>`; return; }
+  tbody.innerHTML = users.map(u => `
+    <tr>
+      <td>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div class="mav" style="width:28px;height:28px;font-size:10px">${(u.name||u.phone||'?')[0].toUpperCase()}</div>
+          <strong>${esc(u.name||'Unnamed')}</strong>
+        </div>
+      </td>
+      <td style="font-family:var(--mono);font-size:12px">${esc(u.phone||'')}</td>
+      <td>${u.role==='ADMIN' ? `<span class="badge badge-cyan">ADMIN</span>` : `<span class="badge badge-dim">USER</span>`}</td>
+      <td style="font-family:var(--mono);font-size:11px;color:var(--sub)">${(u.groupIds||[]).length}</td>
+      <td><button class="btn btn-ghost" onclick="W.openUserDetail('${u.uid||u.id}')">Manage</button></td>
+    </tr>`).join('');
+}
+
+W.filterUsers = (v) => renderUsers(v);
+
+W.openUserDetail = (uid) => {
+  const u = allUsers.find(x => (x.uid||x.id) === uid);
+  if (!u) return;
+  document.getElementById('ud-title').textContent = u.name || u.phone || 'User';
+  document.getElementById('ud-body').innerHTML = `
+    <div class="rblock">
+      <div class="rblock-label">User Info</div>
+      <div class="form-pair"><span class="form-k">Phone</span><span class="form-v">${esc(u.phone||'—')}</span></div>
+      <div class="form-pair"><span class="form-k">Name</span><span class="form-v">${esc(u.name||'—')}</span></div>
+      <div class="form-pair"><span class="form-k">Role</span><span class="form-v">${u.role}</span></div>
+      <div class="form-pair"><span class="form-k">Groups</span><span class="form-v">${(u.groupIds||[]).length}</span></div>
+    </div>`;
+  const foot = document.getElementById('ud-foot');
+  const isAdmin = u.role === 'ADMIN';
+  foot.innerHTML = `
+    <button class="btn btn-ghost" onclick="closeModal('m-userDetail')">Close</button>
+    <button class="btn ${isAdmin ? 'btn-danger' : 'btn-primary'}" onclick="W.toggleAdmin('${uid}','${u.role}')">
+      ${isAdmin ? 'Revoke Admin' : 'Make Admin'}
+    </button>`;
+  openModal('m-userDetail');
+};
+
+W.toggleAdmin = async (uid, currentRole) => {
+  const newRole = currentRole === 'ADMIN' ? 'USER' : 'ADMIN';
+  await db.collection(`${PREFIX}users`).doc(uid).update({ role: newRole });
+  toast(`User ${newRole === 'ADMIN' ? 'promoted to Admin' : 'demoted to User'}`, 'success');
+  closeModal('m-userDetail');
+};
+
+// ── CREATE TASK ───────────────────────────────────────────────────────────────
+function syncCreateTaskOptionState() {
+  const formsOn = document.getElementById('ct-forms').checked;
+  const msgOn = document.getElementById('ct-msg').checked;
+  document.getElementById('ct-forms-config').classList.toggle('ct-config-off', !formsOn);
+  document.getElementById('ct-msg-config').classList.toggle('ct-config-off', !msgOn);
+}
+
+function syncFieldTypeOptionState() {
+  const type = document.getElementById('ct-field-type').value;
+  const showOptions = type === 'DROPDOWN' || type === 'CHECKBOX';
+  document.getElementById('ct-field-options-wrap').style.display = showOptions ? 'flex' : 'none';
+}
+
+function renderTaskFormFields() {
+  const list = document.getElementById('ct-fields-list');
+  if (!ctFormFields.length) {
+    list.innerHTML = `<span class="badge badge-dim">No fields added</span>`;
+    return;
+  }
+  list.innerHTML = ctFormFields.map(f => `
+    <span class="f-chip">
+      <strong>${esc(f.label)}</strong>
+      <span class="badge badge-dim">${esc(f.type)}</span>
+      ${f.required ? `<span class="badge badge-amber">Required</span>` : ``}
+      ${(f.options || []).length ? `<span class="f-chip-opt">${esc(f.options.join(', '))}</span>` : ``}
+      <button type="button" class="f-chip-close" onclick="removeFormField('${f.id}')">✕</button>
+    </span>
+  `).join('');
+}
+
+W.addFormField = () => {
+  if (!document.getElementById('ct-forms').checked) {
+    toast('Enable Forms before adding fields', 'error');
+    return;
+  }
+
+  const labelEl = document.getElementById('ct-field-label');
+  const typeEl = document.getElementById('ct-field-type');
+  const reqEl = document.getElementById('ct-field-required');
+  const optionsEl = document.getElementById('ct-field-options');
+
+  const label = labelEl.value.trim();
+  const type = typeEl.value;
+  const required = reqEl.checked;
+  const options = (optionsEl.value || '')
+    .split(',')
+    .map(x => x.trim())
+    .filter(Boolean);
+
+  if (!label) {
+    toast('Field label is required', 'error');
+    return;
+  }
+  if ((type === 'DROPDOWN' || type === 'CHECKBOX') && !options.length) {
+    toast('Add options for dropdown/checkbox fields', 'error');
+    return;
+  }
+
+  ctFormFields.push({
+    id: `field_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+    label,
+    type,
+    required,
+    options
+  });
+
+  labelEl.value = '';
+  optionsEl.value = '';
+  reqEl.checked = false;
+  renderTaskFormFields();
+};
+
+W.removeFormField = (fieldId) => {
+  ctFormFields = ctFormFields.filter(f => f.id !== fieldId);
+  renderTaskFormFields();
+};
+
+W.openCreateTask = () => {
+  document.getElementById('ct-title').value  = '';
+  document.getElementById('ct-desc').value   = '';
+  document.getElementById('ct-deadline').value = '';
+  document.getElementById('ct-msg-prompt').value = '';
+  document.getElementById('ct-forms').checked = true;
+  document.getElementById('ct-media').checked = true;
+  document.getElementById('ct-msg').checked   = true;
+  document.getElementById('ct-field-label').value = '';
+  document.getElementById('ct-field-type').value = 'TEXT';
+  document.getElementById('ct-field-required').checked = false;
+  document.getElementById('ct-field-options').value = '';
+  ctFormFields = [];
+  syncCreateTaskOptionState();
+  syncFieldTypeOptionState();
+  renderTaskFormFields();
+  const chips = document.getElementById('ct-groups-chips');
+  chips.innerHTML = allGroups.length
+    ? allGroups.map(g => `<span class="chip" data-gid="${g.id}" data-gname="${esc(g.name)}" onclick="this.classList.toggle('on')">${esc(g.name)}</span>`).join('')
+    : `<span style="color:var(--sub);font-size:12px">No groups yet. Create a group first.</span>`;
+  openModal('m-createTask');
+};
+
+W.createTaskFromComplaint = (complaintId) => {
+  const complaint = allComplaints.find(c => c.id === complaintId);
+  if (!complaint) { toast('Complaint not found', 'error'); return; }
+  
+  // Initialize the form with fresh state
+  W.openCreateTask();
+  
+  // Pre-populate task fields from complaint
+  document.getElementById('ct-title').value = `${esc(complaint.title)} (from complaint)`;
+  const description = `Complaint: ${esc(complaint.title)}\nCategory: ${esc(complaint.category||'—')}\nLocation: ${esc(complaint.locationName||'—')}\nReporter: ${esc(complaint.reporterName||'Anonymous')} (${esc(complaint.reporterPhone||'—')})\n\nDescription: ${esc(complaint.description||'')}`;
+  document.getElementById('ct-desc').value = description;
+};
+
+W.createTask = async () => {
+  const title = document.getElementById('ct-title').value.trim();
+  if (!title) { toast('Title is required','error'); return; }
+  const selected = [...document.querySelectorAll('#ct-groups-chips .chip.on')];
+  if (!selected.length) { toast('Select at least one group','error'); return; }
+
+  const groupIds   = selected.map(c => c.dataset.gid);
+  const groupNames = selected.map(c => c.dataset.gname);
+  const deadlineVal = document.getElementById('ct-deadline').value;
+  const allowForms = document.getElementById('ct-forms').checked;
+  const allowMedia = document.getElementById('ct-media').checked;
+  const allowMessage = document.getElementById('ct-msg').checked;
+
+  if (!allowForms && !allowMedia && !allowMessage) {
+    toast('Enable at least one submission type', 'error');
+    return;
+  }
+  if (allowForms && !ctFormFields.length) {
+    toast('Add at least one form field or disable Forms', 'error');
+    return;
+  }
+
+  const taskData = {
+    title,
+    description: document.getElementById('ct-desc').value.trim(),
+    groupIds,
+    targetGroupNames: groupNames,
+    createdBy: currentUser.uid,
+    status: 'ACTIVE',
+    allowForms,
+    allowMedia,
+    allowMessage,
+    messagePrompt: allowMessage ? document.getElementById('ct-msg-prompt').value.trim() : '',
+    formFields: allowForms ? ctFormFields : [],
+    deadline: deadlineVal ? firebase.firestore.Timestamp.fromDate(new Date(deadlineVal)) : null,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  };
+
+  const ref = col.tasks().doc();
+  await ref.set({ ...taskData, id: ref.id });
+  closeModal('m-createTask');
+  toast('Task created and broadcast!', 'success');
+};
+
+// ── CREATE GROUP ──────────────────────────────────────────────────────────────
+W.openCreateGroup = () => {
+  document.getElementById('cg-name').value = '';
+  document.getElementById('cg-desc').value = '';
+  openModal('m-createGroup');
+};
+
+W.createGroup = async () => {
+  const name = document.getElementById('cg-name').value.trim();
+  if (!name) { toast('Group name is required','error'); return; }
+  const ref = col.groups().doc();
+  await ref.set({
+    id: ref.id, name,
+    description: document.getElementById('cg-desc').value.trim(),
+    memberIds: [], createdBy: currentUser.uid, createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  });
+  closeModal('m-createGroup');
+  toast('Group created!', 'success');
+};
+
+// ── RESPONSES ─────────────────────────────────────────────────────────────────
+W.openResponses = async (taskId, taskTitle) => {
+  document.getElementById('resp-task-title').textContent = taskTitle;
+  document.getElementById('resp-task-sub').textContent   = 'Loading responses…';
+  document.getElementById('resp-body').innerHTML = `<div class="loading-row"><span class="spin"></span></div>`;
+  openModal('m-responses');
+
+  const snap = await col.responses(taskId).orderBy('submittedAt','desc').get();
+  const responses = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  const taskMeta = allTasks.find(t => t.id === taskId) || {};
+  const fieldLabels = {};
+  (taskMeta.formFields || []).forEach(f => { fieldLabels[f.id] = f.label || f.id; });
+  document.getElementById('resp-task-sub').textContent = `${responses.length} response${responses.length!==1?'s':''}`;
+
+  if (!responses.length) {
+    document.getElementById('resp-body').innerHTML = `<div class="empty"><span class="empty-icon">◈</span><p>No responses yet</p></div>`;
+    return;
+  }
+
+  document.getElementById('resp-body').innerHTML = responses.map(r => `
+    <div style="border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:12px;background:var(--surface-variant)">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <div>
+          <div style="font-weight:600;font-size:13px">${esc(r.userName||'Unnamed')}</div>
+          <div style="font-family:var(--mono);font-size:11px;color:var(--sub)">${esc(r.userPhone||'')} · ${fmtTs(r.submittedAt)}</div>
+        </div>
+        <span class="badge badge-green">Submitted</span>
+      </div>
+      ${r.message ? `
+        <div class="rblock">
+          <div class="rblock-label">Message</div>
+          <div class="rblock-val">${esc(r.message)}</div>
+        </div>` : ''}
+      ${Object.keys(r.formData||{}).length ? `
+        <div class="rblock">
+          <div class="rblock-label">Form Data</div>
+          ${Object.entries(r.formData).map(([k,v])=>`
+            <div class="form-pair">
+              <span class="form-k">${esc(fieldLabels[k] || k)}</span>
+              <span class="form-v">${esc(v)}</span>
+            </div>`).join('')}
+        </div>` : ''}
+      ${(r.mediaUrls||[]).length ? `
+        <div class="rblock">
+          <div class="rblock-label">Attachments (${r.mediaUrls.length})</div>
+          <div>${r.mediaUrls.map(m=>`
+            <a class="media-link" href="${m.url}" target="_blank">
+              ${m.type==='IMAGE'?'🖼':m.type==='VIDEO'?'🎬':'📎'} ${esc(m.name||m.type)}
+            </a>`).join('')}
+          </div>
+        </div>` : ''}
+    </div>`).join('');
+};
+
+// ── NAV ───────────────────────────────────────────────────────────────────────
+let complaintsOverviewMap = null;
+let complaintsOverviewMapReady = false;
+
+function initComplaintsOverviewMap() {
+  if (complaintsOverviewMapReady) return;
+  complaintsOverviewMapReady = true;
+  complaintsOverviewMap = L.map('complaints-overview-map', { zoomControl: true })
+    .setView([17.385, 78.4867], 11);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19, attribution: '© OpenStreetMap contributors'
+  }).addTo(complaintsOverviewMap);
+  // Render any already-loaded complaints
+  renderComplaintsMapPins();
+}
+
+function renderComplaintsMapPins() {
+  if (!complaintsOverviewMap) return;
+  // Remove all existing markers
+  complaintsOverviewMap.eachLayer(l => {
+    if (l instanceof L.Marker) complaintsOverviewMap.removeLayer(l);
+  });
+
+  const withLocation = (typeof allComplaints !== 'undefined' ? allComplaints : []).filter(c => c.lat && c.lng);
+  const countEl = document.getElementById('complaints-map-count');
+  if (countEl) countEl.textContent = `${withLocation.length} pin${withLocation.length !== 1 ? 's' : ''}`;
+
+  const COLOR = { RESOLVED: '#1a9a5f', IN_PROGRESS: '#d06000', PENDING: '#d14343', REJECTED: '#6b879e' };
+  withLocation.forEach(c => {
+    const color = COLOR[c.status] || '#d14343';
+    const icon = L.divIcon({
+      className: '',
+      html: `<div style="width:26px;height:26px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:${color};border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.25)"></div>`,
+      iconSize: [26, 26], iconAnchor: [13, 26], popupAnchor: [0, -28]
+    });
+    L.marker([c.lat, c.lng], { icon })
+      .addTo(complaintsOverviewMap)
+      .bindPopup(`
+        <b style="font-size:13px">${esc(c.title || 'Complaint')}</b><br>
+        <span style="font-size:11px;color:#666">${esc(c.category || '')} · ${(c.status || '').replace('_', ' ')}</span><br>
+        <span style="font-size:11px">${esc(c.locationName || '')}</span><br>
+        <a href="#" onclick="window.openComplaintDetail && window.openComplaintDetail('${c.id}'); return false;"
+           style="font-size:11px;color:#0e766e;font-weight:600">View details →</a>
+      `)
+      .on('click', () => {
+        if (window.openComplaintDetail) window.openComplaintDetail(c.id);
+      });
+  });
+
+  // Fit map to pins if there are any
+  if (withLocation.length > 0) {
+    const bounds = L.latLngBounds(withLocation.map(c => [c.lat, c.lng]));
+    complaintsOverviewMap.fitBounds(bounds, { padding: [40, 40], maxZoom: 14 });
+  }
+}
+
+W.showPage = (name) => {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById(`page-${name}`).classList.add('active');
+  document.getElementById(`nav-${name}`).classList.add('active');
+  // Init or resize the complaints map when its page is shown
+  if (name === 'complaints') {
+    setTimeout(() => {
+      initComplaintsOverviewMap();
+      if (complaintsOverviewMap) complaintsOverviewMap.invalidateSize();
+    }, 50);
+  }
+};
+
+// ── MODALS ────────────────────────────────────────────────────────────────────
+function openModal(id)  {
+  document.getElementById(id).classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+W.closeModal = (id) => {
+  document.getElementById(id).classList.remove('open');
+  if (!document.querySelector('.overlay.open')) document.body.style.overflow = '';
+};
+document.querySelectorAll('.overlay').forEach(o => {
+  o.addEventListener('click', e => {
+    if (e.target === o) {
+      o.classList.remove('open');
+      if (!document.querySelector('.overlay.open')) document.body.style.overflow = '';
+    }
+  });
+});
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Escape') return;
+  const topOpen = document.querySelector('.overlay.open');
+  if (!topOpen) return;
+  topOpen.classList.remove('open');
+  if (!document.querySelector('.overlay.open')) document.body.style.overflow = '';
+});
+
+// ── TOAST ─────────────────────────────────────────────────────────────────────
+function toast(msg, type='success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = type; t.style.display = 'block';
+  setTimeout(() => { t.style.display = 'none'; }, 3200);
+}
+W.toast = toast;
+
+// ── HELPERS ───────────────────────────────────────────────────────────────────
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function fmtDate(ts) {
+  if (!ts) return '—';
+  const d = ts.toDate ? ts.toDate() : new Date(ts.seconds*1000);
+  return d.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
+}
+function fmtTs(ts) { return fmtDate(ts); }
+
+function statusBadge(s) {
+  const m = { ACTIVE:'badge-green', COMPLETED:'badge-cyan', ARCHIVED:'badge-amber' };
+  return `<span class="badge ${m[s]||'badge-dim'}">${s||'—'}</span>`;
+}
+
+function submissionModeBadges(t) {
+  const formsOn = t.allowForms !== false;
+  const mediaOn = t.allowMedia !== false;
+  const msgOn = t.allowMessage !== false;
+  const modes = [];
+  if (formsOn) modes.push(`<span class="badge badge-cyan">Forms</span>`);
+  if (mediaOn) modes.push(`<span class="badge badge-green">Media</span>`);
+  if (msgOn) modes.push(`<span class="badge badge-amber">Message</span>`);
+  return modes.join(' ') || `<span class="badge badge-red">No submissions</span>`;
+}
+
+function showLoginErr(id, msg) {
+  const el = document.getElementById(id);
+  el.textContent = msg; el.style.display = 'block';
+}
+function hideErr(id) { document.getElementById(id).style.display = 'none'; }
+
+// ── BIND LOGIN BUTTONS (no onclick= in HTML — wired here so firebase scope is accessible) ──
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('sendOtpBtn').addEventListener('click', W.sendOtp);
+  document.getElementById('verifyBtn').addEventListener('click', W.verifyOtp);
+  document.getElementById('backToPhoneBtn').addEventListener('click', W.backToPhone);
+  document.getElementById('otpInput').addEventListener('input', function() {
+    if (this.value.length === 6) W.verifyOtp();
+  });
+  const ctForms = document.getElementById('ct-forms');
+  const ctMsg = document.getElementById('ct-msg');
+  const ctFieldType = document.getElementById('ct-field-type');
+  if (ctForms) ctForms.addEventListener('change', syncCreateTaskOptionState);
+  if (ctMsg) ctMsg.addEventListener('change', syncCreateTaskOptionState);
+  if (ctFieldType) ctFieldType.addEventListener('change', syncFieldTypeOptionState);
+  syncCreateTaskOptionState();
+  syncFieldTypeOptionState();
+  renderTaskFormFields();
+  // Logout button
+  const logoutBtn = document.querySelector('.logout-btn');
+  if (logoutBtn) logoutBtn.addEventListener('click', W.logout);
+});
+
+// ═══════════════════ COMPLAINTS MODULE ═══════════════════
+
+let allComplaints = [];
+let activeComplaintId = null;
+let cdMap = null;
+
+// Extend collections
+col.complaints = () => db.collection(`${PREFIX}complaints`);
+
+function listenComplaints() {
+  col.complaints().orderBy('createdAt','desc').onSnapshot(snap => {
+    allComplaints = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderComplaints(allComplaints);
+    updateComplaintStats(allComplaints);
+  });
+}
+
+function updateComplaintStats(list) {
+  const total    = list.length;
+  const pending  = list.filter(c => c.status === 'PENDING').length;
+  const inprog   = list.filter(c => c.status === 'IN_PROGRESS').length;
+  const resolved = list.filter(c => c.status === 'RESOLVED').length;
+  ['cp-total','st-cmp-total'].forEach(id => { const el=document.getElementById(id); if(el) el.textContent=total; });
+  ['cp-pending','st-cmp-pending'].forEach(id => { const el=document.getElementById(id); if(el) el.textContent=pending; });
+  ['cp-inprog','st-cmp-inprog'].forEach(id => { const el=document.getElementById(id); if(el) el.textContent=inprog; });
+  ['cp-resolved','st-cmp-resolved'].forEach(id => { const el=document.getElementById(id); if(el) el.textContent=resolved; });
+  // Refresh map pins whenever data updates
+  renderComplaintsMapPins();
+}
+
+const COMPLAINT_STATUS_BADGE = {
+  PENDING: 'badge-amber', IN_PROGRESS: 'badge-orange', RESOLVED: 'badge-cyan', REJECTED: 'badge-red'
+};
+
+function renderComplaints(list) {
+  const count = document.getElementById('complaints-count');
+  if(count) count.textContent = list.length;
+  const body = document.getElementById('complaints-body');
+  if (!body) return;
+  if (!list.length) {
+    body.innerHTML = `<tr><td colspan="7"><div class="empty"><span class="empty-icon">◈</span><p>No complaints yet</p></div></td></tr>`;
+    return;
+  }
+  body.innerHTML = list.map(c => `
+    <tr>
+      <td><div style="font-weight:600;font-size:13px">${esc(c.reporterName||'Anonymous')}</div></td>
+      <td><span class="badge badge-dim">${esc(c.category||'—')}</span></td>
+      <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(c.title||'—')}</td>
+      <td style="font-size:12px;color:var(--sub)">${esc(c.locationName||'—')}</td>
+      <td><span class="badge ${COMPLAINT_STATUS_BADGE[c.status]||'badge-dim'}">${(c.status||'').replace('_',' ')}</span></td>
+      <td style="font-family:var(--mono);font-size:11px">${fmtTs(c.createdAt)}</td>
+      <td>
+        <button class="btn btn-ghost" onclick="openComplaintDetail('${c.id}')">View →</button>
+        <button class="btn btn-ghost" onclick="createTaskFromComplaint('${c.id}')" title="Create a task from this complaint">→ Task</button>
+      </td>
+    </tr>`).join('');
+}
+
+W.filterComplaints = () => {
+  const q = (document.getElementById('complaints-search')?.value||'').toLowerCase();
+  const s = document.getElementById('complaints-status-filter')?.value||'';
+  renderComplaints(allComplaints.filter(c =>
+    (!q || (c.title||'').toLowerCase().includes(q) || (c.reporterName||'').toLowerCase().includes(q) || (c.reporterPhone||'').includes(q)) &&
+    (!s || c.status === s)
+  ));
+};
+
+W.openComplaintDetail = (id) => {
+  const c = allComplaints.find(x => x.id === id);
+  if (!c) return;
+  activeComplaintId = id;
+  document.getElementById('cd-title').textContent = c.title || 'Complaint';
+  document.getElementById('cd-sub').textContent = `${c.category||'—'} · ${fmtTs(c.createdAt)}`;
+  document.getElementById('cd-reporter').textContent = c.reporterName || 'Anonymous';
+  document.getElementById('cd-phone').textContent = c.reporterPhone || '—';
+  document.getElementById('cd-category').textContent = c.category || '—';
+  document.getElementById('cd-location').textContent = c.locationName || (c.lat ? `${c.lat.toFixed(5)}, ${c.lng.toFixed(5)}` : '—');
+  document.getElementById('cd-description').textContent = c.description || '—';
+  document.getElementById('cd-status-select').value = c.status || 'PENDING';
+  document.getElementById('cd-update-text').value = '';
+
+  // Image
+  const img = document.getElementById('cd-image');
+  if (c.imageUrl) { img.src = c.imageUrl; img.style.display = 'block'; }
+  else { img.style.display = 'none'; }
+
+  // Admin updates
+  const updList = document.getElementById('cd-updates-list');
+  const updates = c.adminUpdates || [];
+  updList.innerHTML = updates.length
+    ? updates.map(u=>`<div class="upd-item"><div class="upd-item-meta">${esc(u.adminName||'Admin')} · ${u.date||''}</div><div class="upd-item-text">${esc(u.text)}</div></div>`).join('')
+    : '<div style="color:var(--sub);font-size:12px">No updates yet</div>';
+
+  openModal('m-complaint-detail');
+
+  // Init map after modal is visible
+  setTimeout(() => {
+    const mapEl = document.getElementById('cd-map');
+    if (cdMap) { cdMap.remove(); cdMap = null; }
+    if (c.lat && c.lng) {
+      cdMap = L.map('cd-map').setView([c.lat, c.lng], 15);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(cdMap);
+      L.marker([c.lat, c.lng]).addTo(cdMap).bindPopup(`<b>${esc(c.title||'Complaint')}</b><br>${esc(c.locationName||'')}`).openPopup();
+    } else {
+      mapEl.innerHTML = '<div style="height:100%;display:flex;align-items:center;justify-content:center;color:var(--sub);font-size:13px;background:#f3f7f9;border-radius:10px">No location data</div>';
+    }
+  }, 120);
+};
+
+W.updateComplaintStatus = async () => {
+  if (!activeComplaintId) return;
+  const status = document.getElementById('cd-status-select').value;
+  await col.complaints().doc(activeComplaintId).update({ status, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+  toast('Status updated!', 'success');
+};
+
+W.addAdminUpdate = async () => {
+  if (!activeComplaintId) return;
+  const text = document.getElementById('cd-update-text').value.trim();
+  if (!text) { toast('Enter an update message', 'error'); return; }
+  const update = {
+    text,
+    adminName: currentUser.name || currentUser.phone || 'Admin',
+    date: new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})
+  };
+  await col.complaints().doc(activeComplaintId).update({
+    adminUpdates: firebase.firestore.FieldValue.arrayUnion(update),
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  });
+  document.getElementById('cd-update-text').value = '';
+  toast('Update posted!', 'success');
+  // Re-open to refresh updates
+  openComplaintDetail(activeComplaintId);
+};
+
+W.openSendVerificationTask = () => {
+  const c = allComplaints.find(x => x.id === activeComplaintId);
+  if (!c) return;
+  document.getElementById('vt-title').value = `Verify: ${c.title||'Complaint'}`;
+  document.getElementById('vt-desc').value = `Please visit ${c.locationName||'the reported location'} and verify the following issue:\n\n${c.description||''}`;
+  document.getElementById('vt-deadline').value = '';
+  // Render group chips
+  const wrap = document.getElementById('vt-groups-chips');
+  wrap.innerHTML = allGroups.map(g=>`<button type="button" class="chip" data-id="${g.id}" onclick="this.classList.toggle('on')">${esc(g.name)}</button>`).join('');
+  openModal('m-verify-task');
+};
+
+W.sendVerificationTask = async () => {
+  const title = document.getElementById('vt-title').value.trim();
+  if (!title) { toast('Task title required','error'); return; }
+  const chips = document.querySelectorAll('#vt-groups-chips .chip.on');
+  if (!chips.length) { toast('Select at least one group','error'); return; }
+  const groupIds = [...chips].map(c => c.dataset.id);
+  const groupNames = [...chips].map(c => c.textContent);
+  const deadlineVal = document.getElementById('vt-deadline').value;
+  const c = allComplaints.find(x => x.id === activeComplaintId);
+
+  const taskData = {
+    title,
+    description: document.getElementById('vt-desc').value.trim(),
+    groupIds, targetGroupNames: groupNames,
+    createdBy: currentUser.uid,
+    status: 'ACTIVE',
+    allowForms: false, allowMedia: true, allowMessage: true,
+    isVerificationTask: true,
+    complaintId: activeComplaintId,
+    messagePrompt: 'Describe what you found at the site',
+    formFields: [],
+    deadline: deadlineVal ? firebase.firestore.Timestamp.fromDate(new Date(deadlineVal)) : null,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  };
+  const ref = col.tasks().doc();
+  await ref.set({ ...taskData, id: ref.id });
+  // Link task to complaint
+  if (c) {
+    await col.complaints().doc(activeComplaintId).update({
+      verificationTaskId: ref.id,
+      status: 'IN_PROGRESS',
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  }
+  closeModal('m-verify-task');
+  toast('Verification task sent!', 'success');
+};
+
+// Extend loadAll
+const _origLoadAll = loadAll;
+function loadAll() {
+  listenTasks();
+  listenGroups();
+  listenUsers();
+  listenComplaints();
+}
+
+</script>
+</body>
+</html>
